@@ -1,0 +1,11 @@
+[package]
+name = "rust-em"
+version = "0.1.0"
+authors = ["emturner"]
+
+[dependencies]
+
+[[bin]]
+name = "step0_repl"
+path = "step0_repl.rs"
+
