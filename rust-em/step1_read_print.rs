@@ -1,5 +1,7 @@
 use std::io::{self, Write};
 
+mod reader;
+
 fn main()
 {
     loop 

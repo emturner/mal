@@ -9,3 +9,6 @@ authors = ["emturner"]
 name = "step0_repl"
 path = "step0_repl.rs"
 
+[[bin]]
+name = "step1_read_print"
+path = "step1_read_print.rs"
