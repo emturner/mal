@@ -95,7 +95,17 @@ fn tokenize(input: &str) -> Result<Vec<&str>, String> {
                 tokens.push(&input[pos..pos+1]);
                 pos = pos + 1;
             },
-            _ if c.is_whitespace() || c == ',' => pos = capture_token(input, pos, x, &mut tokens),
+            _ if c.is_whitespace() || c == ',' => 
+            {
+                pos = capture_token(input, pos, x, &mut tokens);
+                let _ = chars.by_ref().skip_while(|(_, c)| {
+                    c.is_whitespace() || c == &','
+                });
+
+                if let Some((x, _)) = chars.by_ref().peek() {
+                    pos = *x;
+                }
+            },
             _ => continue,
         }
     }
@@ -118,8 +128,14 @@ fn read_list<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType<'a>, Strin
 
     while let Some(token) = reader.peek() {
         match token {
-            &")" => return Ok(MalType::List(list)),
-            _ => list.push(read_form(reader)?)
+            &")" => {
+                let _ = reader.next();
+                return Ok(MalType::List(list))
+            },
+            _ => {
+                let x = read_form(reader);
+                list.push(x?);
+            }
         }
     }
     return Err(String::from("matching closing brace not found"));
