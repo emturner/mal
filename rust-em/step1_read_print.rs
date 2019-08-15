@@ -1,6 +1,11 @@
 use std::io::{self, Write};
 
 mod reader;
+mod types;
+mod printer;
+
+use printer::pr_str;
+use types::MalType;
 
 fn main()
 {
@@ -23,21 +28,18 @@ fn main()
     }
 }
 
-fn read(s: &String) -> String 
-{
-    s.to_string()
+fn read(s: &String) -> Result<MalType, String> {
+    reader::read_str(s)
 }
 
-fn eval(s: &String) -> String 
-{
-    s.to_string()
+fn eval(s: Result<MalType, String>) -> Result<MalType, String> {
+    s
 }
 
-fn print(s: &String) -> String 
-{
-    s.to_string()
+fn print(s: Result<MalType, String>) -> String {
+    pr_str(s)
 }
 
 fn rep(s: &String) -> String {
-    print(&eval(&read(s)))
+    print(eval(read(s)))
 }

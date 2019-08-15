@@ -1,4 +1,9 @@
 use std::iter::Peekable;
+use types::MalType;
+
+pub fn read_str(input: &str) -> Result<MalType, String> {
+    read_form(&mut Reader::new(tokenize(input)?))
+}
 
 struct Reader<'a> {
     position: usize,
@@ -29,7 +34,7 @@ impl<'a> Iterator for Reader<'a> {
     }
 }
 
-fn capture_token<'a>(s: &'a str, start: usize, end: usize, mut tokens: &mut Vec<&'a str> ) -> usize {
+fn capture_token<'a>(s: &'a str, start: usize, end: usize, tokens: &mut Vec<&'a str> ) -> usize {
     if start < end {
         tokens.push(&s[start..end]);
     }
@@ -57,9 +62,13 @@ fn tokenize(input: &str) -> Result<Vec<&str>, String> {
                 match chars.peek() {
                     Some((x, '@')) => {
                         tokens.push(&input[pos..x+1]);
+                        pos = x+1;
                         let _ = chars.by_ref().skip(1);
                     },
-                    _ => tokens.push(&input[pos..pos+1]),
+                    _ => {
+                        tokens.push(&input[pos..pos+1]);
+                        pos = pos + 1;
+                    },
                 }
             },
             '"' => {
@@ -72,6 +81,7 @@ fn tokenize(input: &str) -> Result<Vec<&str>, String> {
                         },
                         '"' => {
                             tokens.push(&input[pos..x+1]);
+                            pos = x + 1;
                             break;
                         },
                         _ => continue
@@ -82,7 +92,8 @@ fn tokenize(input: &str) -> Result<Vec<&str>, String> {
             _ if "[]{}()'`~^@".contains(c) => {
                 pos = capture_token(input, pos, x, &mut tokens);
 
-                tokens.push(&input[pos..pos+1])
+                tokens.push(&input[pos..pos+1]);
+                pos = pos + 1;
             },
             _ if c.is_whitespace() || c == ',' => pos = capture_token(input, pos, x, &mut tokens),
             _ => continue,
@@ -90,4 +101,34 @@ fn tokenize(input: &str) -> Result<Vec<&str>, String> {
     }
 
     Ok(tokens)
+}
+
+fn read_form<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType<'a>, String> {
+    if let Some(token) = reader.next() {
+        match token {
+            "(" => return read_list(reader),
+            _ => return read_atom(token),
+        }
+    }
+    Err(String::from("reader is empty")) 
+}
+
+fn read_list<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType<'a>, String> {
+    let mut list = vec!();
+
+    while let Some(token) = reader.peek() {
+        match token {
+            &")" => return Ok(MalType::List(list)),
+            _ => list.push(read_form(reader)?)
+        }
+    }
+    return Err(String::from("matching closing brace not found"));
+}
+
+fn read_atom(token: &str) -> Result<MalType<'_>, String> {
+    if let Ok(i) = i64::from_str_radix(token, 10) {
+        Ok(MalType::Int(i))
+    } else {
+        Ok(MalType::Symbol(token))
+    }
 }
