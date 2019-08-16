@@ -113,7 +113,7 @@ fn tokenize(input: &str) -> Result<Vec<&str>, String> {
     Ok(tokens)
 }
 
-fn read_form<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType<'a>, String> {
+fn read_form<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType, String> {
     if let Some(token) = reader.next() {
         match token {
             "(" => return read_list(reader),
@@ -124,7 +124,7 @@ fn read_form<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType<'a>, Strin
     Err(String::from("BLAH"))
 }
 
-fn read_list<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType<'a>, String> {
+fn read_list<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType, String> {
     let mut list = vec!();
 
     while let Some(token) = reader.peek() {
@@ -142,7 +142,7 @@ fn read_list<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType<'a>, Strin
     return Err(String::from("(EOF|end of input|unbalanced"));
 }
 
-fn read_vector<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType<'a>, String> {
+fn read_vector<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType, String> {
     let mut vector = vec!();
 
     while let Some(token) = reader.peek() {
@@ -160,7 +160,7 @@ fn read_vector<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType<'a>, Str
     return Err(String::from("(EOF|end of input|unbalanced"));
 }
 
-fn read_atom(token: &str) -> Result<MalType<'_>, String> {
+fn read_atom(token: &str) -> Result<MalType, String> {
     if let Ok(b) = token.parse::<bool>() {
         Ok(MalType::Bool(b))
     } else if let Ok(i) = token.parse::<i64>() {
@@ -168,6 +168,6 @@ fn read_atom(token: &str) -> Result<MalType<'_>, String> {
     } else if token == "nil" {
         Ok(MalType::Nil())
     } else {
-        Ok(MalType::Symbol(token))
+        Ok(MalType::Symbol(token.to_string()))
     }
 }

@@ -1,14 +1,15 @@
-#[derive(Debug)]
-pub enum MalType<'a> {
-    List(Vec<MalType<'a>>),
-    Vector(Vec<MalType<'a>>),
+#[derive(Debug, Clone)]
+pub enum MalType {
+    List(Vec<MalType>),
+    Vector(Vec<MalType>),
     Int(i64),
-    Symbol(&'a str),
+    Symbol(String),
     Nil(),
     Bool(bool),
+    Func(fn (i64, i64) -> i64)
 }
 
-impl<'a> MalType<'a> {
+impl MalType {
     pub fn pr_str(&self) -> String {
         match self {
             MalType::List(l) => {
@@ -22,7 +23,8 @@ impl<'a> MalType<'a> {
             MalType::Symbol(s) => format!("{}", s),
             MalType::Int(i) => format!("{}", i),
             MalType::Nil() => String::from("nil"),
-            MalType::Bool(b) => format!("{}", b)
+            MalType::Bool(b) => format!("{}", b),
+            MalType::Func(f) => format!("{:?}", f)
         }
     }
 }
