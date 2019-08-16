@@ -87,8 +87,8 @@ fn tokenize(input: &str) -> Result<Vec<&str>, String> {
                         _ => continue
                     }
                 }
-                return Err(format!("string not terminated: {}", &input[pos..])); 
-            }
+                return Err(String::from("(EOF|end of input|unbalanced)"));
+            },
             _ if "[]{}()'`~^@".contains(c) => {
                 pos = capture_token(input, pos, x, &mut tokens);
 
@@ -117,10 +117,11 @@ fn read_form<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType<'a>, Strin
     if let Some(token) = reader.next() {
         match token {
             "(" => return read_list(reader),
+            "[" => return read_vector(reader),
             _ => return read_atom(token),
         }
     }
-    Err(String::from("reader is empty")) 
+    Err(String::from("BLAH"))
 }
 
 fn read_list<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType<'a>, String> {
@@ -138,7 +139,25 @@ fn read_list<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType<'a>, Strin
             }
         }
     }
-    return Err(String::from("matching closing brace not found"));
+    return Err(String::from("(EOF|end of input|unbalanced"));
+}
+
+fn read_vector<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType<'a>, String> {
+    let mut vector = vec!();
+
+    while let Some(token) = reader.peek() {
+        match token {
+            &"]" => {
+                let _ = reader.next();
+                return Ok(MalType::Vector(vector))
+            },
+            _ => {
+                let x = read_form(reader);
+                vector.push(x?);
+            }
+        }
+    }
+    return Err(String::from("(EOF|end of input|unbalanced"));
 }
 
 fn read_atom(token: &str) -> Result<MalType<'_>, String> {

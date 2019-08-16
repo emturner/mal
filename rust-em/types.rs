@@ -1,6 +1,7 @@
 #[derive(Debug)]
 pub enum MalType<'a> {
     List(Vec<MalType<'a>>),
+    Vector(Vec<MalType<'a>>),
     Int(i64),
     Symbol(&'a str),
     Nil(),
@@ -13,6 +14,10 @@ impl<'a> MalType<'a> {
             MalType::List(l) => {
                 let vals: String = l.iter().map(|mt| mt.pr_str()).collect::<Vec<String>>().join(" ");
                 format!("({})", vals)
+            },
+            MalType::Vector(v) => {
+                let vals: String = v.iter().map(|mt| mt.pr_str()).collect::<Vec<String>>().join(" ");
+                format!("[{}]", vals)
             },
             MalType::Symbol(s) => format!("{}", s),
             MalType::Int(i) => format!("{}", i),
