@@ -47,7 +47,7 @@ fn tokenize(input: &str) -> Result<Vec<&str>, String> {
     let mut pos = 0;
     let mut tokens = vec![];
 
-    while let Some((x, c)) = chars.next()
+    'outer: while let Some((x, c)) = chars.next()
     {
         match c {
             ';' => {
@@ -77,12 +77,12 @@ fn tokenize(input: &str) -> Result<Vec<&str>, String> {
                 while let Some((x, nc)) = chars.by_ref().next() {
                     match nc {
                         '\\' => {
-                            let _ = chars.by_ref().skip(1);
+                            let _ = chars.next();
                         },
                         '"' => {
                             tokens.push(&input[pos..x+1]);
                             pos = x + 1;
-                            break;
+                            continue 'outer;
                         },
                         _ => continue
                     }
@@ -142,8 +142,12 @@ fn read_list<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType<'a>, Strin
 }
 
 fn read_atom(token: &str) -> Result<MalType<'_>, String> {
-    if let Ok(i) = i64::from_str_radix(token, 10) {
+    if let Ok(b) = token.parse::<bool>() {
+        Ok(MalType::Bool(b))
+    } else if let Ok(i) = token.parse::<i64>() {
         Ok(MalType::Int(i))
+    } else if token == "nil" {
+        Ok(MalType::Nil())
     } else {
         Ok(MalType::Symbol(token))
     }
