@@ -57,11 +57,11 @@ fn eval(s: Result<MalType, String>, env: &MalEnv) -> Result<MalType, String> {
     match s? {
         MalType::List(ref l) if l.len() == 0 => Ok(MalType::List(l.to_vec())),
         MalType::List(ref l) if l.len() > 0 => {
-            println!("list {:?}", l);
-            let vec = eval(s?, env)?;
-            println!("evald {:?}", vec);
-            match eval_ast(&vec[0], env)? {
-                MalType::Func(f) => Ok(MalType::Int(vec[1..].iter().fold(Ok(0), |acc, x| {
+            //println!("l {:?}", l);
+            let vec = eval_vec_elemwise(l, env)?;
+            //println!("vec {:?}", vec);
+            match (eval_ast(&vec[0], env)?, &vec[1]) {
+                (MalType::Func(f), MalType::Int(acc)) => Ok(MalType::Int(vec[2..].iter().fold(Ok(*acc), |acc, x| {
                     acc.and_then(|acc| match x {
                         MalType::Int(i) => Ok(f(acc, *i)),
                         _ => Err("Excepted an int")
@@ -90,7 +90,7 @@ fn eval_ast(ast: &MalType, env: &MalEnv) -> Result<MalType, String> {
 }
 
 fn eval_vec_elemwise(vec: &Vec<MalType>, env: &MalEnv) -> Result<Vec<MalType>, String> {
-    vec.iter().map(|elem| eval_ast(elem, env)).collect::<Result<Vec<_>, _>>()
+    vec.iter().map(|elem| eval(Ok(elem.clone()), env)).collect::<Result<Vec<_>, _>>()
 }
 
 fn print(output: Result<MalType, String>) -> String {
