@@ -85,6 +85,9 @@ fn eval_ast(ast: &MalType, env: &MalEnv) -> Result<MalType, String> {
         MalType::List(l) => {
             Ok(MalType::List(eval_vec_elemwise(l, env)?))
         },
+        MalType::Vector(v) => {
+            Ok(MalType::Vector(eval_vec_elemwise(v, env)?))
+        }
         _ => Ok(ast.clone()),
     }
 }
