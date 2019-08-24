@@ -10,11 +10,20 @@ pub struct MalEnv {
 }
 
 impl MalEnv {
-    pub fn new(outer: Option<Rc<RefCell<MalEnv>>>) -> Rc<RefCell<MalEnv>> {
-        Rc::new(RefCell::new(MalEnv {
+    pub fn new(outer: Option<Rc<RefCell<MalEnv>>>, bindings: Vec<&str>, vals: Vec<MalType>) -> Result<Rc<RefCell<MalEnv>>, String> {
+        let mut env = MalEnv {
             outer: outer,
             data: HashMap::new()
-        }))
+        };
+
+        if bindings.len() == vals.len() {
+            for (b, v) in bindings.iter().zip(vals) {
+                env.set(b, v);
+            }
+            Ok(Rc::new(RefCell::new(env)))
+        } else {
+            Err(String::from("Bindings list has a different length to the values list"))
+        }
     }
 
     pub fn set(&mut self, symbol: &str, value: MalType) {
