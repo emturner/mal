@@ -1,28 +1,33 @@
 use std::io::{self, Write};
-use std::rc::Rc;
-use std::cell::RefCell;
 
 mod env;
 mod printer;
 mod reader;
 mod types;
 
-use env::MalEnv;
+use env::{Env, MalEnv};
 use printer::pr_str;
 use types::MalType;
 
-type RefMalEnv = Rc<RefCell<MalEnv>>;
+fn expect_int_args_fold(args: &[MalType], acc: i64, op: fn(i64, i64) -> i64) -> Result<MalType, String> {
+    let result = args.iter().fold(Ok(acc), |acc, y| match y {
+        MalType::Int(i) => Ok(op(acc?, *i)),
+        _ => Err(String::from("Expected int")),
+    });
+
+    Ok(MalType::Int(result?))
+}
 
 fn main() -> Result<(), String> {
 
     let bindings = vec!("+", "-", "*", "/");
     let vals = vec!(
-        MalType::Func(|x, y| x + y),
-        MalType::Func(|x, y| x - y),
-        MalType::Func(|x, y| x * y),
-        MalType::Func(|x, y| x / y),
+        MalType::Func(|args| expect_int_args_fold(args, 0, |x, y| x + y)),
+        MalType::Func(|args| expect_int_args_fold(args, 0, |x, y| x - y)),
+        MalType::Func(|args| expect_int_args_fold(args, 1, |x, y| x * y)),
+        MalType::Func(|args| expect_int_args_fold(args, 1, |x, y| x / y)),
     );
-    let env = MalEnv::new(None, bindings, vals)?;
+    let env = Env::new(None, bindings, vals)?;
 
     loop {
         print!("user> ");
@@ -48,7 +53,7 @@ fn read(s: &String) -> Result<MalType, String> {
     reader::read_str(s)
 }
 
-fn eval(s: Result<MalType, String>, env: RefMalEnv) -> Result<MalType, String> {
+fn eval(s: Result<MalType, String>, env: MalEnv) -> Result<MalType, String> {
     match s? {
         MalType::List(ref l) if l.len() == 0 => Ok(MalType::List(l.to_vec())),
         MalType::List(ref l) => {
@@ -61,7 +66,7 @@ fn eval(s: Result<MalType, String>, env: RefMalEnv) -> Result<MalType, String> {
                                 env.borrow_mut().set(binding, val.clone()?);
                                 val
                             },
-                            x => Err(String::from(format!("Expected Symbol, got {:?}", x)))
+                            _ => Err(String::from("Expected Symbol"))
                         }
                     } else {
                         Err(String::from("Expected 2 parameters to 'def!' binding"))
@@ -74,7 +79,7 @@ fn eval(s: Result<MalType, String>, env: RefMalEnv) -> Result<MalType, String> {
                             MalType::Vector(ref b) => b,
                             _ => return Err(String::from("Expected List or Vector"))
                         }.iter();
-                        let inner = MalEnv::new(Some(env.clone()), vec!(), vec!())?;
+                        let inner = Env::new(Some(env.clone()), vec!(), vec!())?;
                         
                         while let Some(b) = bindings.next() {
                             if let MalType::Symbol(s) = b {
@@ -96,14 +101,9 @@ fn eval(s: Result<MalType, String>, env: RefMalEnv) -> Result<MalType, String> {
                 },
                 _ => {
                     let vec = eval_vec_elemwise(l, env.clone())?;
-                    match (eval_ast(&vec[0], env.clone())?, &vec[1]) {
-                        (MalType::Func(f), MalType::Int(acc)) => Ok(MalType::Int(vec[2..].iter().fold(Ok(*acc), |acc, x| {
-                            acc.and_then(|acc| match x {
-                                MalType::Int(i) => Ok(f(acc, *i)),
-                                _ => Err("Excepted an int")
-                            })})?)),
+                    match eval_ast(&vec[0], env.clone())? {
+                        MalType::Func(f) => f(&vec[1..]),
                         _ => Err(String::from("not a function!"))
-
                     }
                 }
             }
@@ -112,7 +112,7 @@ fn eval(s: Result<MalType, String>, env: RefMalEnv) -> Result<MalType, String> {
      }
 }
 
-fn eval_ast(ast: &MalType, env: RefMalEnv) -> Result<MalType, String> {
+fn eval_ast(ast: &MalType, env: MalEnv) -> Result<MalType, String> {
     match ast {
         MalType::Symbol(s) => env.borrow().get(s),
         MalType::List(l) => {
@@ -125,7 +125,7 @@ fn eval_ast(ast: &MalType, env: RefMalEnv) -> Result<MalType, String> {
     }
 }
 
-fn eval_vec_elemwise(vec: &Vec<MalType>, env: RefMalEnv) -> Result<Vec<MalType>, String> {
+fn eval_vec_elemwise(vec: &Vec<MalType>, env: MalEnv) -> Result<Vec<MalType>, String> {
     vec.iter().map(|elem| eval(Ok(elem.clone()), env.clone())).collect::<Result<Vec<_>, _>>()
 }
 
@@ -133,6 +133,6 @@ fn print(output: Result<MalType, String>) -> String {
     pr_str(output)
 }
 
-fn rep(input: &String, env: RefMalEnv) -> String {
+fn rep(input: &String, env: MalEnv) -> String {
     print(eval(read(input), env))
 }

@@ -4,14 +4,16 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-pub struct MalEnv {
-    outer: Option<Rc<RefCell<MalEnv>>>,
+pub type MalEnv = Rc<RefCell<Env>>;
+
+pub struct Env {
+    outer: Option<MalEnv>,
     data: HashMap<String, MalType>
 }
 
-impl MalEnv {
-    pub fn new(outer: Option<Rc<RefCell<MalEnv>>>, bindings: Vec<&str>, vals: Vec<MalType>) -> Result<Rc<RefCell<MalEnv>>, String> {
-        let mut env = MalEnv {
+impl Env {
+    pub fn new(outer: Option<MalEnv>, bindings: Vec<&str>, vals: Vec<MalType>) -> Result<MalEnv, String> {
+        let mut env = Env {
             outer: outer,
             data: HashMap::new()
         };

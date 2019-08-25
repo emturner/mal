@@ -1,4 +1,4 @@
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum MalType {
     List(Vec<MalType>),
     Vector(Vec<MalType>),
@@ -6,7 +6,7 @@ pub enum MalType {
     Symbol(String),
     Nil(),
     Bool(bool),
-    Func(fn (i64, i64) -> i64)
+    Func(fn (args: &[MalType]) -> Result<MalType, String>)
 }
 
 impl MalType {
@@ -24,7 +24,7 @@ impl MalType {
             MalType::Int(i) => format!("{}", i),
             MalType::Nil() => String::from("nil"),
             MalType::Bool(b) => format!("{}", b),
-            MalType::Func(f) => format!("{:?}", f)
+            MalType::Func(_) => String::from("#<function>")
         }
     }
 }
