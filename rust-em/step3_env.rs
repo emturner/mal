@@ -9,23 +9,27 @@ use env::{Env, MalEnv};
 use printer::pr_str;
 use types::MalType;
 
-fn expect_int_args_fold(args: &[MalType], acc: i64, op: fn(i64, i64) -> i64) -> Result<MalType, String> {
-    let result = args.iter().fold(Ok(acc), |acc, y| match y {
-        MalType::Int(i) => Ok(op(acc?, *i)),
-        _ => Err(String::from("Expected int")),
-    });
+fn expect_int_args_fold(args: &[MalType], acc: &MalType, op: fn(i64, i64) -> i64) -> Result<MalType, String> {
+    if let MalType::Int(i) = acc {
+        let result = args.iter().fold(Ok(*i), |acc, y| match y {
+            MalType::Int(i) => Ok(op(acc?, *i)),
+            _ => Err(String::from("Expected int")),
+        });
 
-    Ok(MalType::Int(result?))
+        Ok(MalType::Int(result?))
+    } else {
+        Err(String::from("Expected int"))
+    }
 }
 
 fn main() -> Result<(), String> {
 
     let bindings = vec!("+", "-", "*", "/");
     let vals = vec!(
-        MalType::Func(|args| expect_int_args_fold(args, 0, |x, y| x + y)),
-        MalType::Func(|args| expect_int_args_fold(args, 0, |x, y| x - y)),
-        MalType::Func(|args| expect_int_args_fold(args, 1, |x, y| x * y)),
-        MalType::Func(|args| expect_int_args_fold(args, 1, |x, y| x / y)),
+        MalType::Func(|args| expect_int_args_fold(&args[1..], &args[0], |x, y| x + y)),
+        MalType::Func(|args| expect_int_args_fold(&args[1..], &args[0], |x, y| x - y)),
+        MalType::Func(|args| expect_int_args_fold(&args[1..], &args[0], |x, y| x * y)),
+        MalType::Func(|args| expect_int_args_fold(&args[1..], &args[0], |x, y| x / y)),
     );
     let env = Env::new(None, bindings, vals)?;
 

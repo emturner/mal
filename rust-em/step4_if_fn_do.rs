@@ -9,23 +9,26 @@ use env::{Env, MalEnv};
 use printer::pr_str;
 use types::MalType;
 
-fn expect_int_args_fold(args: &[MalType], acc: i64, op: fn(i64, i64) -> i64) -> Result<MalType, String> {
-    let result = args.iter().fold(Ok(acc), |acc, y| match y {
-        MalType::Int(i) => Ok(op(acc?, *i)),
-        _ => Err(String::from("Expected int")),
-    });
-
-    Ok(MalType::Int(result?))
+fn expect_int_args_fold(args: &[MalType], acc: &MalType, op: fn(i64, i64) -> i64) -> Result<MalType, String> {
+    if let MalType::Int(a) = acc {
+        let result = args.iter().fold(Ok(*a), |acc, y| match y {
+            MalType::Int(i) => Ok(op(acc?, *i)),
+            _ => Err(String::from("Expected int")),
+        });
+        Ok(MalType::Int(result?))
+    } else {
+        Err(String::from("Expected int"))
+    }
 }
 
 fn main() -> Result<(), String> {
 
     let bindings = vec!("+", "-", "*", "/");
     let vals = vec!(
-        MalType::Func(|args| expect_int_args_fold(args, 0, |x, y| x + y)),
-        MalType::Func(|args| expect_int_args_fold(args, 0, |x, y| x - y)),
-        MalType::Func(|args| expect_int_args_fold(args, 1, |x, y| x * y)),
-        MalType::Func(|args| expect_int_args_fold(args, 1, |x, y| x / y)),
+        MalType::Func(|args| expect_int_args_fold(&args[1..], &args[0], |x, y| x + y)),
+        MalType::Func(|args| expect_int_args_fold(&args[1..], &args[0], |x, y| x - y)),
+        MalType::Func(|args| expect_int_args_fold(&args[1..], &args[0], |x, y| x * y)),
+        MalType::Func(|args| expect_int_args_fold(&args[1..], &args[0], |x, y| x / y)),
     );
     let env = Env::new(None, bindings, vals)?;
 
@@ -99,6 +102,10 @@ fn eval(s: Result<MalType, String>, env: MalEnv) -> Result<MalType, String> {
                         Err(String::from("Expected 2 parameters to 'let*' bindings"))
                     }
                 },
+                MalType::Symbol(ref s) if s == "do" => {
+                    let vec = eval_vec_elemwise(&l[1..], env.clone())?;
+                    Ok(vec[vec.len() - 1].clone())
+                }
                 _ => {
                     let vec = eval_vec_elemwise(l, env.clone())?;
                     match eval_ast(&vec[0], env.clone())? {
@@ -125,7 +132,7 @@ fn eval_ast(ast: &MalType, env: MalEnv) -> Result<MalType, String> {
     }
 }
 
-fn eval_vec_elemwise(vec: &Vec<MalType>, env: MalEnv) -> Result<Vec<MalType>, String> {
+fn eval_vec_elemwise(vec: &[MalType], env: MalEnv) -> Result<Vec<MalType>, String> {
     vec.iter().map(|elem| eval(Ok(elem.clone()), env.clone())).collect::<Result<Vec<_>, _>>()
 }
 
