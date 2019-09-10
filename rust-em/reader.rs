@@ -14,7 +14,7 @@ impl Reader<'_> {
     fn new(tokens: Vec<&str>) -> Peekable<Reader> {
         Reader {
             position: 0,
-            tokens: tokens,
+            tokens,
         }
         .peekable()
     }
@@ -25,21 +25,22 @@ impl<'a> Iterator for Reader<'a> {
 
     fn next(&mut self) -> Option<&'a str> {
         let pos = self.position;
-        self.position = self.position + 1;
+        self.position += 1;
 
-        match pos < self.tokens.len() {
-            true => Some(self.tokens[pos]),
-            false => None,
+        if pos < self.tokens.len() {
+            Some(self.tokens[pos])
+        } else {
+            None
         }
     }
 }
 
-fn capture_token<'a>(s: &'a str, start: usize, end: usize, tokens: &mut Vec<&'a str> ) -> usize {
+fn capture_token<'a>(s: &'a str, start: usize, end: usize, tokens: &mut Vec<&'a str>) -> usize {
     if start < end {
         tokens.push(&s[start..end]);
     }
 
-    return end;
+    end
 }
 
 fn tokenize(input: &str) -> Result<Vec<&str>, String> {
@@ -47,8 +48,7 @@ fn tokenize(input: &str) -> Result<Vec<&str>, String> {
     let mut pos = 0;
     let mut tokens = vec![];
 
-    'outer: while let Some((x, c)) = chars.next()
-    {
+    'outer: while let Some((x, c)) = chars.next() {
         match c {
             ';' => {
                 pos = capture_token(input, pos, x, &mut tokens);
@@ -61,16 +61,16 @@ fn tokenize(input: &str) -> Result<Vec<&str>, String> {
 
                 match chars.peek() {
                     Some((x, '@')) => {
-                        tokens.push(&input[pos..x+1]);
-                        pos = x+1;
+                        tokens.push(&input[pos..=*x]);
+                        pos = x + 1;
                         let _ = chars.by_ref().skip(1);
-                    },
+                    }
                     _ => {
-                        tokens.push(&input[pos..pos+1]);
-                        pos = pos + 1;
-                    },
+                        tokens.push(&input[pos..=pos]);
+                        pos += 1;
+                    }
                 }
-            },
+            }
             '"' => {
                 pos = capture_token(input, pos, x, &mut tokens);
 
@@ -78,34 +78,33 @@ fn tokenize(input: &str) -> Result<Vec<&str>, String> {
                     match nc {
                         '\\' => {
                             let _ = chars.next();
-                        },
+                        }
                         '"' => {
-                            tokens.push(&input[pos..x+1]);
+                            tokens.push(&input[pos..=x]);
                             pos = x + 1;
                             continue 'outer;
-                        },
-                        _ => continue
+                        }
+                        _ => continue,
                     }
                 }
                 return Err(String::from("(EOF|end of input|unbalanced)"));
-            },
+            }
             _ if "[]{}()'`~^@".contains(c) => {
                 pos = capture_token(input, pos, x, &mut tokens);
 
-                tokens.push(&input[pos..pos+1]);
-                pos = pos + 1;
-            },
-            _ if c.is_whitespace() || c == ',' => 
-            {
+                tokens.push(&input[pos..=pos]);
+                pos += 1;
+            }
+            _ if c.is_whitespace() || c == ',' => {
                 pos = capture_token(input, pos, x, &mut tokens);
-                let _ = chars.by_ref().skip_while(|(_, c)| {
-                    c.is_whitespace() || c == &','
-                });
+                let _ = chars
+                    .by_ref()
+                    .skip_while(|(_, c)| c.is_whitespace() || c == &',');
 
                 if let Some((x, _)) = chars.by_ref().peek() {
                     pos = *x;
                 }
-            },
+            }
             _ => continue,
         }
     }
@@ -125,39 +124,39 @@ fn read_form<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType, String> {
 }
 
 fn read_list<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType, String> {
-    let mut list = vec!();
+    let mut list = vec![];
 
     while let Some(token) = reader.peek() {
-        match token {
-            &")" => {
+        match *token {
+            ")" => {
                 let _ = reader.next();
-                return Ok(MalType::List(list))
-            },
+                return Ok(MalType::List(list));
+            }
             _ => {
                 let x = read_form(reader);
                 list.push(x?);
             }
         }
     }
-    return Err(String::from("(EOF|end of input|unbalanced"));
+    Err(String::from("(EOF|end of input|unbalanced"))
 }
 
 fn read_vector<'a>(reader: &mut Peekable<Reader<'a>>) -> Result<MalType, String> {
-    let mut vector = vec!();
+    let mut vector = vec![];
 
     while let Some(token) = reader.peek() {
-        match token {
-            &"]" => {
+        match *token {
+            "]" => {
                 let _ = reader.next();
-                return Ok(MalType::Vector(vector))
-            },
+                return Ok(MalType::Vector(vector));
+            }
             _ => {
                 let x = read_form(reader);
                 vector.push(x?);
             }
         }
     }
-    return Err(String::from("(EOF|end of input|unbalanced"));
+    Err(String::from("(EOF|end of input|unbalanced"))
 }
 
 fn read_atom(token: &str) -> Result<MalType, String> {

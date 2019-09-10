@@ -6,25 +6,33 @@ pub enum MalType {
     Symbol(String),
     Nil(),
     Bool(bool),
-    Func(fn (args: &[MalType]) -> Result<MalType, String>)
+    Func(fn(args: &[MalType]) -> Result<MalType, String>),
 }
 
 impl MalType {
     pub fn pr_str(&self) -> String {
         match self {
             MalType::List(l) => {
-                let vals: String = l.iter().map(|mt| mt.pr_str()).collect::<Vec<String>>().join(" ");
+                let vals: String = l
+                    .iter()
+                    .map(|mt| mt.pr_str())
+                    .collect::<Vec<String>>()
+                    .join(" ");
                 format!("({})", vals)
-            },
+            }
             MalType::Vector(v) => {
-                let vals: String = v.iter().map(|mt| mt.pr_str()).collect::<Vec<String>>().join(" ");
+                let vals: String = v
+                    .iter()
+                    .map(|mt| mt.pr_str())
+                    .collect::<Vec<String>>()
+                    .join(" ");
                 format!("[{}]", vals)
-            },
-            MalType::Symbol(s) => format!("{}", s),
-            MalType::Int(i) => format!("{}", i),
+            }
+            MalType::Symbol(s) => s.to_string(),
+            MalType::Int(i) => i.to_string(),
             MalType::Nil() => String::from("nil"),
-            MalType::Bool(b) => format!("{}", b),
-            MalType::Func(_) => String::from("#<function>")
+            MalType::Bool(b) => b.to_string(),
+            MalType::Func(_) => String::from("#<function>"),
         }
     }
 }

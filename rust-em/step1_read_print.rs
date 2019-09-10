@@ -1,34 +1,30 @@
 use std::io::{self, Write};
 
+mod printer;
 mod reader;
 mod types;
-mod printer;
 
 use printer::pr_str;
 use types::MalType;
 
-fn main()
-{
-    loop 
-    {
+fn main() {
+    loop {
         print!("user> ");
         io::stdout().flush().unwrap();
 
         let mut input = String::new();
-        match io::stdin().read_line(&mut input)
-        {
+        match io::stdin().read_line(&mut input) {
             Ok(0) => break,
             Ok(_) => println!("{}", rep(&input)),
-            Err(e) => 
-            {
+            Err(e) => {
                 println!("{}", e);
-                break
+                break;
             }
         }
     }
 }
 
-fn read(s: &String) -> Result<MalType, String> {
+fn read(s: &str) -> Result<MalType, String> {
     reader::read_str(s)
 }
 
@@ -40,6 +36,6 @@ fn print(s: Result<MalType, String>) -> String {
     pr_str(s)
 }
 
-fn rep(s: &String) -> String {
+fn rep(s: &str) -> String {
     print(eval(read(s)))
 }
