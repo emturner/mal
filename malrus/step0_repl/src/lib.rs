@@ -7,5 +7,5 @@ pub fn mal(input: TokenStream) -> TokenStream {
         let result = \"{}\";
 
         println!(\"{{}}\", result);
-    }}", input.to_string()).parse().unwrap()
+    }}", input).parse().unwrap()
 }
