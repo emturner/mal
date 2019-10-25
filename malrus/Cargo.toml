@@ -1,6 +1,5 @@
 [workspace]
 
 members = [
-    "builder",
-    "step0"
+    "builder"
 ]
