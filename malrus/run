@@ -1,0 +1,10 @@
+#!/bin/bash
+
+export STEP=${STEP:-stepA_mal}
+
+while true; do
+	read -e -p "user> " r
+	export MALRUS_INPUT=$r
+	
+	cargo run -q
+done

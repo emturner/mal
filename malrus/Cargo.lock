@@ -4,7 +4,7 @@
 name = "builder"
 version = "0.1.0"
 dependencies = [
- "step0 0.1.0",
+ "step0_repl 0.1.0",
 ]
 
 [[package]]
@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "step0"
+name = "step0_repl"
 version = "0.1.0"
 dependencies = [
  "proc-macro2 1.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
