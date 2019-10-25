@@ -1,5 +1,5 @@
-fn main() {
-    let result = include!(concat!(env!("OUT_DIR"), "/.malrus.rs"));
+include!(concat!(env!("OUT_DIR"), "/.malrus.rs"));
 
-    println!("{}", result);
+fn main() {
+    run_mal()
 }
