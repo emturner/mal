@@ -10,16 +10,13 @@ fn main() {
     let malrus_step = fs::read_to_string(".mal_step")
         .expect(".mal_step not found");
 
-    let malrus_input = fs::read_to_string(".malrus.mal")
-        .expect(".malrus.mal not found");
-
     let mut f = File::create(&dest_path).unwrap();
 
-    let gen = format!("
+    let gen = format!(r#"
         use {}::mal;
 
         mal!({});
-    ", malrus_step, malrus_input);
-    
+    "#, malrus_step, fs::canonicalize(Path::new(".malrus.mal")).unwrap().to_string_lossy());
+
     f.write_all(gen.as_bytes()).expect("could not write to file");
 }

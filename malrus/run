@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo ${STEP:-stepA_mal} > builder/.mal_step
+echo ${STEP:-step0_repl} > builder/.mal_step
 
 while true; do
 	read -e -p "user> " r
