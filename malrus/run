@@ -1,0 +1,12 @@
+#!/bin/bash
+
+echo ${STEP:-step0_repl} > builder/.mal_step
+
+while true; do
+	read -e -p "user> " r
+
+	echo $r > builder/.malrus.mal
+	
+	touch builder/build.rs
+	cargo run -q
+done

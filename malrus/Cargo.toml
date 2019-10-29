@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "builder",
+    "step0_repl"
+]
