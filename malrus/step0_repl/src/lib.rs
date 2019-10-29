@@ -1,18 +1,5 @@
-use std::fs;
-use std::path::Path;
-
-extern crate proc_macro;
-use proc_macro::TokenStream;
-
-#[proc_macro]
-pub fn mal_main(input: TokenStream) -> TokenStream {
-
-    let mal_file: String  = input.into_iter().map(|t| t.to_string()).collect();
-
-    let mal_path = Path::new(&mal_file);
-    let mal_input = fs::read_to_string(mal_path).expect(&mal_path.to_string_lossy());
-
+pub fn compile_to_main(mal_input: String) -> String {
     format!("fn main() {{ 
         print!(\"{{}}\", r#\"{}\"#);
-    }}", mal_input).parse().unwrap()
+    }}", mal_input)
 }
