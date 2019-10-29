@@ -13,9 +13,9 @@ fn main() {
     let mut f = File::create(&dest_path).unwrap();
 
     let gen = format!(r#"
-        use {}::mal;
+        use {}::mal_main;
 
-        mal!({});
+        mal_main!({});
     "#, malrus_step, fs::canonicalize(Path::new(".malrus.mal")).unwrap().to_string_lossy());
 
     f.write_all(gen.as_bytes()).expect("could not write to file");
