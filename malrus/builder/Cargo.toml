@@ -11,3 +11,4 @@ build = "build.rs"
 
 [build-dependencies]
 step0_repl = { path = "../step0_repl" }
+step1_read_print = { path = "../step1_read_print" }

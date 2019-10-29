@@ -5,9 +5,14 @@ name = "builder"
 version = "0.1.0"
 dependencies = [
  "step0_repl 0.1.0",
+ "step1_read_print 0.1.0",
 ]
 
 [[package]]
 name = "step0_repl"
+version = "0.1.0"
+
+[[package]]
+name = "step1_read_print"
 version = "0.1.0"
 
